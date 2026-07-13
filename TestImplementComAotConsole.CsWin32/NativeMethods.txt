@@ -3,6 +3,11 @@ Ole32.*
 Windowscodecs.*
 
 // インターフェース
+IWICBitmapEncoder
 IWICImagingFactory2
 
+// 定数
 CLSID_WICImagingFactory2
+GUID_ContainerFormatPng
+GUID_WICPixelFormat32bppBGRA
+STATFLAG
