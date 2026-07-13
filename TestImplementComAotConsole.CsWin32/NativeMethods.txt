@@ -1,2 +1,8 @@
 // モジュール
+Ole32.*
 Windowscodecs.*
+
+// インターフェース
+IWICImagingFactory2
+
+CLSID_WICImagingFactory2
