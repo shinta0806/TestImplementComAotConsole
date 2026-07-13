@@ -4,6 +4,8 @@
 // 
 // ============================================================================
 
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Imaging;
@@ -26,7 +28,10 @@ internal class Program
 			// 準備
 			PInvoke.CoCreateInstance(PInvoke.CLSID_WICImagingFactory2, null, CLSCTX.CLSCTX_INPROC_SERVER, out IWICImagingFactory2* factory2).ThrowOnFailure();
 
-			WriteToHGlobal(factory2);
+			//WriteToHGlobal(factory2);
+			WriteToCustomStream(factory2);
+
+
 		}
 		catch (Exception ex)
 		{
@@ -53,6 +58,10 @@ internal class Program
 
 		try
 		{
+#if true
+			stream->Seek(0, SeekOrigin.Begin).ThrowOnFailure();
+#endif
+
 			// PNG エンコーダー
 			factory2->CreateEncoder(PInvoke.GUID_ContainerFormatPng, Guid.Empty, &encoder).ThrowOnFailure();
 			encoder->Initialize(stream, WICBitmapEncoderCacheOption.WICBitmapEncoderNoCache).ThrowOnFailure();
@@ -110,6 +119,18 @@ internal class Program
 				factory2->Release();
 			}
 		}
+	}
+
+	/// <summary>
+	/// 画像を自作 COM で書き込む
+	/// </summary>
+	/// <param name="factory2"></param>
+	private static unsafe void WriteToCustomStream(IWICImagingFactory2* factory2)
+	{
+		StrategyBasedComWrappers cw = new();
+		Com.CustomStream customStream = new();
+		nint ptr = cw.GetOrCreateComInterfaceForObject(customStream, CreateComInterfaceFlags.None);
+		WriteCore(factory2, (IStream*)ptr);
 	}
 
 	/// <summary>
