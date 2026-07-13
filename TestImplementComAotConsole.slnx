@@ -2,6 +2,10 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
+  <Project Path="TestImplementComAotConsole.Com/TestImplementComAotConsole.Com.csproj">
+    <Platform Project="x64" />
+    <Build Solution="Release|*" Project="false" />
+  </Project>
   <Project Path="TestImplementComAotConsole.CsWin32/TestImplementComAotConsole.CsWin32.csproj">
     <Platform Project="x64" />
     <Build Solution="Release|*" Project="false" />
