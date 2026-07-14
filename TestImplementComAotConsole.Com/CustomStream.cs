@@ -1,3 +1,13 @@
+// ============================================================================
+// 
+// IStream インターフェースを実装する自作 COM
+// 
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// サンプルプログラムが稼働する最小限の内容
+// ----------------------------------------------------------------------------
+
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 
@@ -10,6 +20,10 @@ namespace TestImplementComAotConsole.Com;
 [GeneratedComClass]
 public partial class CustomStream : IStream
 {
+	// ====================================================================
+	// インターフェース実装
+	// ====================================================================
+
 	// --------------------------------------------------------------------
 	// ISequentialStream
 	// --------------------------------------------------------------------
@@ -18,7 +32,13 @@ public partial class CustomStream : IStream
 	[return: MarshalAs(UnmanagedType.Error)]
 	public unsafe HRESULT Read(void* pv, UInt32 cb, [Optional] UInt32* pcbRead)
 	{
-		Console.WriteLine("Read()");
+		Span<Byte> src = new(_contents);
+		Span<Byte> dest = new(pv, (Int32)cb);
+		src.CopyTo(dest);
+		if (pcbRead != null)
+		{
+			*pcbRead = cb;
+		}
 		return HRESULT.S_OK;
 	}
 
@@ -26,7 +46,10 @@ public partial class CustomStream : IStream
 	[return: MarshalAs(UnmanagedType.Error)]
 	public unsafe HRESULT Write(void* pv, UInt32 cb, [Optional] UInt32* pcbWritten)
 	{
-		Console.WriteLine("Write()");
+		_contents = new Byte[cb];
+		Span<Byte> src = new(pv, (Int32)cb);
+		Span<Byte> dest = new(_contents);
+		src.CopyTo(dest);
 		if (pcbWritten != null)
 		{
 			*pcbWritten = cb;
@@ -42,7 +65,6 @@ public partial class CustomStream : IStream
 	[return: MarshalAs(UnmanagedType.Error)]
 	public unsafe HRESULT Seek(Int64 dlibMove, SeekOrigin dwOrigin, [Optional] UInt64* plibNewPosition)
 	{
-		Console.WriteLine("Seek()");
 		return HRESULT.S_OK;
 	}
 
@@ -92,6 +114,7 @@ public partial class CustomStream : IStream
 	[return: MarshalAs(UnmanagedType.Error)]
 	public unsafe HRESULT Stat(STATSTG* pstatstg, STATFLAG grfStatFlag)
 	{
+		pstatstg->cbSize = (UInt64)_contents.Length;
 		return HRESULT.S_OK;
 	}
 
@@ -102,4 +125,13 @@ public partial class CustomStream : IStream
 		ppstm = this;
 		return HRESULT.S_OK;
 	}
+
+	// ====================================================================
+	// private 変数
+	// ====================================================================
+
+	/// <summary>
+	/// 書き込まれた内容
+	/// </summary>
+	private Byte[] _contents = Array.Empty<Byte>();
 }
