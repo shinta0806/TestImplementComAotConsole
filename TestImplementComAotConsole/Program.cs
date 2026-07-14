@@ -1,6 +1,6 @@
 // ============================================================================
 // 
-// IStream を用いて PNG 画像を書き込む
+// new した自作 COM を用いて PNG 画像を書き込む
 // 
 // ============================================================================
 
@@ -139,6 +139,7 @@ internal class Program
 	/// <param name="factory2"></param>
 	private static unsafe Byte[] WriteToCustomStream(IWICImagingFactory2* factory2)
 	{
+		IUnknown* unk = null;
 		IStream* stream = null;
 
 		try
@@ -148,12 +149,11 @@ internal class Program
 
 			// COM として使えるように ComWrappers を通じて IUnknown を取得
 			StrategyBasedComWrappers cw = new();
-			IUnknown* unk = (IUnknown*)cw.GetOrCreateComInterfaceForObject(customStream, CreateComInterfaceFlags.None);
+			unk = (IUnknown*)cw.GetOrCreateComInterfaceForObject(customStream, CreateComInterfaceFlags.None);
 
 			// IStream を取得
 			// この IStream は（COM を実装する時に使用した TestImplementComAotConsole.Com.IStream ではなく）Windows.Win32.System.Com.IStream であることに留意
 			unk->QueryInterface(out stream).ThrowOnFailure();
-			unk->Release();
 
 			return WriteCore("CustomCOM", factory2, stream);
 		}
@@ -162,6 +162,10 @@ internal class Program
 			if (stream != null)
 			{
 				stream->Release();
+			}
+			if (unk != null)
+			{
+				unk->Release();
 			}
 		}
 	}

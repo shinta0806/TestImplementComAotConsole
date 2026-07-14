@@ -32,9 +32,8 @@ public partial class CustomStream : IStream
 	[return: MarshalAs(UnmanagedType.Error)]
 	public unsafe HRESULT Read(void* pv, UInt32 cb, [Optional] UInt32* pcbRead)
 	{
-		Span<Byte> src = new(_contents);
 		Span<Byte> dest = new(pv, (Int32)cb);
-		src.CopyTo(dest);
+		_contents.CopyTo(dest);
 		if (pcbRead != null)
 		{
 			*pcbRead = cb;
@@ -48,8 +47,7 @@ public partial class CustomStream : IStream
 	{
 		_contents = new Byte[cb];
 		Span<Byte> src = new(pv, (Int32)cb);
-		Span<Byte> dest = new(_contents);
-		src.CopyTo(dest);
+		src.CopyTo(_contents);
 		if (pcbWritten != null)
 		{
 			*pcbWritten = cb;
