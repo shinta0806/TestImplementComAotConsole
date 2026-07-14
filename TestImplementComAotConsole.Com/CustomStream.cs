@@ -27,6 +27,10 @@ public partial class CustomStream : IStream
 	public unsafe HRESULT Write(void* pv, UInt32 cb, [Optional] UInt32* pcbWritten)
 	{
 		Console.WriteLine("Write()");
+		if (pcbWritten != null)
+		{
+			*pcbWritten = cb;
+		}
 		return HRESULT.S_OK;
 	}
 

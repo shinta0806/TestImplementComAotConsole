@@ -6,6 +6,7 @@
 
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
+
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Imaging;
@@ -58,10 +59,6 @@ internal class Program
 
 		try
 		{
-#if true
-			stream->Seek(0, SeekOrigin.Begin).ThrowOnFailure();
-#endif
-
 			// PNG エンコーダー
 			factory2->CreateEncoder(PInvoke.GUID_ContainerFormatPng, Guid.Empty, &encoder).ThrowOnFailure();
 			encoder->Initialize(stream, WICBitmapEncoderCacheOption.WICBitmapEncoderNoCache).ThrowOnFailure();
@@ -129,8 +126,9 @@ internal class Program
 	{
 		StrategyBasedComWrappers cw = new();
 		Com.CustomStream customStream = new();
-		nint ptr = cw.GetOrCreateComInterfaceForObject(customStream, CreateComInterfaceFlags.None);
-		WriteCore(factory2, (IStream*)ptr);
+		IUnknown* unk = (IUnknown*)cw.GetOrCreateComInterfaceForObject(customStream, CreateComInterfaceFlags.None);
+		unk->QueryInterface(out IStream* stream).ThrowOnFailure();
+		WriteCore(factory2, stream);
 	}
 
 	/// <summary>
