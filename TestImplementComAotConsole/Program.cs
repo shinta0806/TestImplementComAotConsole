@@ -53,7 +53,6 @@ internal class Program
 			{
 				factory2->Release();
 			}
-
 			PInvoke.CoUninitialize();
 		}
 	}
@@ -77,6 +76,9 @@ internal class Program
 
 			// PNG エンコーダー
 			factory2->CreateEncoder(PInvoke.GUID_ContainerFormatPng, Guid.Empty, &encoder).ThrowOnFailure();
+
+			// COM インスタンスである stream を渡す
+			// 自作 COM を new したものであろうと、システム COM のインスタンスであろうと、同じように扱える
 			encoder->Initialize(stream, WICBitmapEncoderCacheOption.WICBitmapEncoderNoCache).ThrowOnFailure();
 
 			// 2x2 px フレーム作成
@@ -141,11 +143,18 @@ internal class Program
 
 		try
 		{
-			StrategyBasedComWrappers cw = new();
+			// 自作 COM のインスタンスを new で作成
 			Com.CustomStream customStream = new();
+
+			// COM として使えるように ComWrappers を通じて IUnknown を取得
+			StrategyBasedComWrappers cw = new();
 			IUnknown* unk = (IUnknown*)cw.GetOrCreateComInterfaceForObject(customStream, CreateComInterfaceFlags.None);
+
+			// IStream を取得
+			// この IStream は（COM を実装する時に使用した TestImplementComAotConsole.Com.IStream ではなく）Windows.Win32.System.Com.IStream であることに留意
 			unk->QueryInterface(out stream).ThrowOnFailure();
 			unk->Release();
+
 			return WriteCore("CustomCOM", factory2, stream);
 		}
 		finally
@@ -158,7 +167,7 @@ internal class Program
 	}
 
 	/// <summary>
-	/// 画像を ToHGlobal に書き込む
+	/// 画像を HGlobal に書き込む
 	/// </summary>
 	private static unsafe Byte[] WriteToHGlobal(IWICImagingFactory2* factory2)
 	{
